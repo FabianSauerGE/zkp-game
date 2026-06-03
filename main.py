@@ -1,16 +1,19 @@
 import sys
 
 # pylint: disable=no-member
-import pygame  
+import pygame
+
+from graph import random_planar_graph
+from draw import draw
 
 WIDTH, HEIGHT = 1200, 800
 FPS = 60
-N_VERTICES = 22
+N_VERTICES = 10
 DROP_PROB = 0.35
 
 
 def build():
-    return 0
+    return random_planar_graph(N_VERTICES)
 
 
 def main():
@@ -32,7 +35,15 @@ def main():
                     sys.exit()
                 if event.key == pygame.K_r:
                     graph = build()
+                if event.key == pygame.K_UP:
+                    global N_VERTICES  # pylint: disable=global-statement
+                    N_VERTICES = min(N_VERTICES + 1, 24)
+                    graph = build()
+                if event.key == pygame.K_DOWN:
+                    N_VERTICES = max(N_VERTICES - 1, 6)
+                    graph = build()
 
+        draw(screen, graph)
         pygame.display.flip()
         clock.tick(FPS)
 
