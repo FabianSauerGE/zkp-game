@@ -14,13 +14,14 @@ import sys
 
 from src.graph import GraphEmbedding, random_planar_graph
 from src.layout import GraphLayout, FruchtermanReingoldLayout
-from src.draw import MARGIN, draw
+from src.draw import MARGIN, draw, draw_hud
 
 FPS = 60
-WIDTH, HEIGHT = 1280, 720
+WIDTH, HEIGHT = 800, 600
 
 N_VERTICES = 10
 DROP_PROB = 0.2
+EDGE_REPULSION = True
 
 
 def build() -> tuple[GraphEmbedding, GraphLayout]:
@@ -33,7 +34,7 @@ def build() -> tuple[GraphEmbedding, GraphLayout]:
     layout_size = (WIDTH - 2 * MARGIN, HEIGHT - 2 * MARGIN)
     graph = random_planar_graph(N_VERTICES, DROP_PROB)
     graph.rescale(layout_size)
-    layout = FruchtermanReingoldLayout(graph, size=layout_size, c=0.9)
+    layout = FruchtermanReingoldLayout(graph, size=layout_size, c=0.9, edge_repulsion=EDGE_REPULSION)
     return graph, layout
 
 
@@ -43,8 +44,10 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Graph 3-Coloring  |  R = regenerate  |  ESC = quit")
     clock = pygame.time.Clock()
+    font = pygame.font.SysFont("monospace", 16)
 
     global N_VERTICES  # pylint: disable=global-statement
+    global EDGE_REPULSION  # pylint: disable=global-statement
     graph, layout = build()
 
     while True:
@@ -58,6 +61,9 @@ def main():
                     sys.exit()
                 if event.key == pygame.K_r:
                     graph, layout = build()
+                if event.key == pygame.K_e:
+                    EDGE_REPULSION = not EDGE_REPULSION
+                    graph, layout = build()
                 if event.key == pygame.K_UP:
                     N_VERTICES = min(N_VERTICES + 1, 24)
                     graph, layout = build()
@@ -67,7 +73,8 @@ def main():
 
         if layout.temp > 0.01:
             layout.step()
-            draw(screen, graph)
+        draw(screen, graph)
+        draw_hud(screen, font, graph, EDGE_REPULSION)
 
         pygame.display.flip()
         clock.tick(FPS)

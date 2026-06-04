@@ -56,7 +56,7 @@ class FruchtermanReingoldLayout(GraphLayout):
     preserves planarity established by the Delaunay construction.
     """
 
-    def __init__(self, g: GraphEmbedding, size: tuple[float, float], c: float = 1, temp: float = 10):
+    def __init__(self, g: GraphEmbedding, size: tuple[float, float], c: float = 1, temp: float = 10, edge_repulsion=True):
         """Set up the FR layout.
 
         :param g: Start embedding; its vertex positions are updated
@@ -74,6 +74,8 @@ class FruchtermanReingoldLayout(GraphLayout):
 
         self._alpha = 0.95
         self._temp0 = temp
+
+        self._edge_repulsion = edge_repulsion
 
     @property
     def temp(self):
@@ -114,27 +116,53 @@ class FruchtermanReingoldLayout(GraphLayout):
         :returns: Force vector to be added to *u*'s displacement (and subtracted from *v*'s).
         """
         uv, dist = self._dir(u, v)
-        return - self._k**2 / dist * uv
+        return - self._k**2 / max(dist, 0.01) * uv
+
+    @staticmethod
+    def _closest_on_segment(a, b, p) -> np.typing.NDArray:
+        """Return the closest point on segment *ab* to point *p*.
+
+        :param a: Start of the segment.
+        :param b: End of the segment.
+        :param p: Query point.
+        :returns: Point on ``[a, b]`` nearest to *p*.
+        """
+        ab = b - a
+        t = np.dot(p - a, ab) / np.dot(ab, ab)
+        return a + np.clip(t, 0, 1) * ab
 
     def _forces(self) -> np.typing.NDArray:
         """Compute the net force on every vertex for the current positions.
 
-        Iterates over all vertex pairs for repulsion and all edges for attraction.
+        Applies vertex-vertex repulsion and edge attraction (standard FR), plus
+        optional repulsion between each vertex and the closest point on every
+        non-incident edge.
 
+        :param edge_repulsion: Whether to include vertex-edge repulsion.
+            Defaults to ``True``.
         :returns: Array of shape ``(n, 2)`` with the net force vector per vertex.
         """
-        forces = np.zeros(self._g.vertices.shape)
+        vertices = self._g.vertices
+        forces = np.zeros(vertices.shape)
 
         for u in range(self._g.n_vertices):
             for v in range(u + 1, self._g.n_vertices):
-                f = self._repulsion(self._g.vertices[u], self._g.vertices[v])
+                f = self._repulsion(vertices[u], vertices[v])
                 forces[u] += f
                 forces[v] -= f
 
         for u, v in self._g.edges:
-            f = self._attraction(self._g.vertices[u], self._g.vertices[v])
+            f = self._attraction(vertices[u], vertices[v])
             forces[u] += f
             forces[v] -= f
+
+        if self._edge_repulsion:
+            for u in range(self._g.n_vertices):
+                for v, w in self._g.edges:
+                    if u in (v, w):
+                        continue
+                    closest = self._closest_on_segment(vertices[v], vertices[w], vertices[u])
+                    forces[u] += 0.5 * self._repulsion(vertices[u], closest)
 
         return forces
 
