@@ -3,17 +3,19 @@ import sys
 # pylint: disable=no-member
 import pygame
 
-from graph import random_planar_graph
+from graph import GraphEmbedding, random_planar_graph
 from draw import draw
 
 WIDTH, HEIGHT = 1200, 800
 FPS = 60
 N_VERTICES = 10
-DROP_PROB = 0.35
+DROP_PROB = 0.2
 
 
-def build():
-    return random_planar_graph(N_VERTICES)
+def build() -> GraphEmbedding:
+    graph = random_planar_graph(N_VERTICES, DROP_PROB)
+    graph.rescale((WIDTH - 100, HEIGHT - 100))
+    return graph
 
 
 def main():

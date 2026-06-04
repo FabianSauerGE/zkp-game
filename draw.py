@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 
-from graph import Graph
+from graph import GraphEmbedding
 
 
 BG = (18, 18, 18)
@@ -15,13 +15,10 @@ COLORS = [
 ]
 VERTEX_RADIUS = 18
 
-def draw(screen: pygame.Surface, graph: Graph, margin: int = 50) -> None:
+def draw(screen: pygame.Surface, graph: GraphEmbedding, margin: int = 50) -> None:
     screen.fill(BG)
-    width, height = screen.get_size()
-    draw_width = width - 2 * margin
-    draw_height = height - 2 * margin
 
-    pts = np.array([margin, margin]) + graph.vertices * np.array([draw_width, draw_height])
+    pts = np.array([margin, margin]) + graph.vertices
     pts = pts.astype(int)
 
     for u, v in graph.edges:
