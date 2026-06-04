@@ -24,22 +24,14 @@ class Graph:
 
         :param edges: List of ``(u, v)`` pairs representing undirected edges.
         """
-        self._n_vertices = len({v for e in edges for v in e})
+        self.n_vertices = len({v for e in edges for v in e})
 
-        self._edges = edges
+        self.edges = edges
 
         self._neighbors = self._get_neighbors(edges)
 
-    @property
-    def edges(self) -> list[tuple[int, int]]:
-        """The edge list.
-
-        :returns: A copy of the list of ``(u, v)`` pairs representing undirected edges.
-        """
-        return list(self._edges)
-
     def __str__(self):
-        return f"G: n = {self._n_vertices}, E = {self._edges}"
+        return f"G: n = {self.n_vertices}, E = {self.edges}"
 
     @staticmethod
     def _get_neighbors(edges) -> dict[int, set[int]]:
@@ -66,10 +58,10 @@ class Graph:
         :returns: Dict mapping vertex id to color index.
         """
         coloring = {}
-        for u in range(self._n_vertices):
+        for u in range(self.n_vertices):
             # Choose lowest availabe color not used by any neighbor
             used = {coloring[nb] for nb in self._neighbors[u] if nb in coloring}
-            coloring[u] = next(c for c in range(self._n_vertices) if c not in used)
+            coloring[u] = next(c for c in range(self.n_vertices) if c not in used)
         return coloring
 
     def is_connected(self) -> bool:
@@ -82,11 +74,11 @@ class Graph:
         visited = set()
         stack = [0]
         while stack:
-            u = stack.pop()
-            if u not in visited:
-                visited.add(u)
-                stack.extend(self._neighbors[u] - visited)
-        return len(visited) == self._n_vertices
+            v = stack.pop()
+            if v not in visited:
+                visited.add(v)
+                stack.extend(self._neighbors[v] - visited)
+        return len(visited) == self.n_vertices
 
 
 class InvalidEmbedding(Exception):
@@ -111,29 +103,21 @@ class GraphEmbedding(Graph):
         """
         super().__init__(edges)
 
-        if not len(vertices) == self._n_vertices:
-            raise InvalidEmbedding(len(vertices), self._n_vertices)
+        if not len(vertices) == self.n_vertices:
+            raise InvalidEmbedding(len(vertices), self.n_vertices)
 
-        self._vertices = vertices
-
-    @property
-    def vertices(self) -> np.typing.NDArray:
-        """The vertex coordinate array.
-
-        :returns: A copy of the array of shape ``(n, 2)`` with the ``(x, y)`` position of each vertex.
-        """
-        return self._vertices.copy()
+        self.vertices = vertices
 
     def __str__(self):
-        vertices = ", ".join(f'({x:.2}, {y:.2})' for x, y in self._vertices)
-        return super().__str__() + f", V = [{vertices}]"
+        vertices_str = ", ".join(f'({x:.2}, {y:.2})' for x, y in self.vertices)
+        return super().__str__() + f", V = [{vertices_str}]"
 
     def rescale(self, factor: tuple[float, float]) -> None:
         """Scale all vertex coordinates in-place by ``(sx, sy)``.
 
         :param factor: A ``(sx, sy)`` tuple applied element-wise to every vertex.
         """
-        self._vertices *= np.array(factor)
+        self.vertices *= np.array(factor)
 
 
 def random_planar_graph(n: int = 10, drop_prob: float = 0.2) -> GraphEmbedding:

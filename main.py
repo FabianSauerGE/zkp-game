@@ -9,64 +9,32 @@ Controls:
     ESC/Q    -- quit
 """
 # pylint: disable=no-member
-import numpy as np
 import pygame
 import sys
 
 from graph import GraphEmbedding, random_planar_graph
+from layout import GraphLayout, FruchtermanReingoldLayout
+from draw import MARGIN, draw
 
-WIDTH, HEIGHT = 1200, 800
-MARGIN = 50
 FPS = 60
-
-BG = (18, 18, 18)
-EDGE_COLOR = (80, 80, 80)
-EDGE_WIDTH = 2
-VERTEX_COLORS = [
-    (229, 115, 87),   # coral
-    (29, 158, 117),   # teal
-    (239, 159, 39),   # amber
-    (150, 120, 200),  # fallback purple
-    (150, 150, 150)   # fallback grey
-]
-VERTEX_RADIUS = 18
+WIDTH, HEIGHT = 1280, 720
 
 N_VERTICES = 10
 DROP_PROB = 0.2
 
 
-def build() -> GraphEmbedding:
+def build() -> tuple[GraphEmbedding, GraphLayout]:
     """Generate a new graph and scale its coordinates to fit the display area.
 
-    :returns: A :class:`GraphEmbedding` whose vertices lie within the drawable
-        region ``[MARGIN, WIDTH-MARGIN] x [MARGIN, HEIGHT-MARGIN]``.
+    :returns: Tuple of the new :class:`~graph.GraphEmbedding` (vertices scaled
+        to the drawable region ``[MARGIN, WIDTH-MARGIN] x [MARGIN, HEIGHT-MARGIN]``)
+        and the :class:`~layout.FruchtermanReingoldLayout` warm-started from it.
     """
+    layout_size = (WIDTH - 2 * MARGIN, HEIGHT - 2 * MARGIN)
     graph = random_planar_graph(N_VERTICES, DROP_PROB)
-    graph.rescale((WIDTH - 2 * MARGIN, HEIGHT - 2 * MARGIN))
-    return graph
-
-
-def draw(screen: pygame.Surface, graph: GraphEmbedding) -> None:
-    """Render the graph onto *screen* for the current frame.
-
-    Draws edges as grey lines, then vertices as filled circles colored by
-    their greedy coloring index into :data:`VERTEX_COLORS`.
-
-    :param screen: The pygame surface to draw onto.
-    :param graph: The embedded graph to render.
-    """
-    screen.fill(BG)
-
-    pts = np.array([MARGIN, MARGIN]) + graph.vertices
-    pts = pts.astype(int)
-
-    for u, v in graph.edges:
-        pygame.draw.line(screen, EDGE_COLOR, pts[u], pts[v], 2)
-
-    for v, (x, y) in enumerate(pts):
-        color = VERTEX_COLORS[graph.greedy_coloring[v]]
-        pygame.draw.circle(screen, color, (x, y), VERTEX_RADIUS)
-        pygame.draw.circle(screen, BG, (x, y), VERTEX_RADIUS, 2)
+    graph.rescale(layout_size)
+    layout = FruchtermanReingoldLayout(graph, size=layout_size, c=0.9)
+    return graph, layout
 
 
 def main():
@@ -77,7 +45,7 @@ def main():
     clock = pygame.time.Clock()
 
     global N_VERTICES  # pylint: disable=global-statement
-    graph = build()
+    graph, layout = build()
 
     while True:
         for event in pygame.event.get():
@@ -89,15 +57,18 @@ def main():
                     pygame.quit()
                     sys.exit()
                 if event.key == pygame.K_r:
-                    graph = build()
+                    graph, layout = build()
                 if event.key == pygame.K_UP:
                     N_VERTICES = min(N_VERTICES + 1, 24)
-                    graph = build()
+                    graph, layout = build()
                 if event.key == pygame.K_DOWN:
                     N_VERTICES = max(N_VERTICES - 1, 6)
-                    graph = build()
+                    graph, layout = build()
 
-        draw(screen, graph)
+        if layout.temp > 0.01:
+            layout.step()
+            draw(screen, graph)
+
         pygame.display.flip()
         clock.tick(FPS)
 
