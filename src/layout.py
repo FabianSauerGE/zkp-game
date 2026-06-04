@@ -9,7 +9,7 @@ import numpy as np
 
 from abc import ABC, abstractmethod
 
-from graph import GraphEmbedding
+from src.graph import GraphEmbedding
 
 
 class GraphLayout(ABC):
@@ -155,7 +155,7 @@ class FruchtermanReingoldLayout(GraphLayout):
 
 
 if __name__ == "__main__":
-    from graph import random_planar_graph
+    from src.graph import random_planar_graph
     layout_size = (800, 600)
     graph = random_planar_graph(6)
     graph.rescale(layout_size)

@@ -12,9 +12,9 @@ Controls:
 import pygame
 import sys
 
-from graph import GraphEmbedding, random_planar_graph
-from layout import GraphLayout, FruchtermanReingoldLayout
-from draw import MARGIN, draw
+from src.graph import GraphEmbedding, random_planar_graph
+from src.layout import GraphLayout, FruchtermanReingoldLayout
+from src.draw import MARGIN, draw
 
 FPS = 60
 WIDTH, HEIGHT = 1280, 720

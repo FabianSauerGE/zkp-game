@@ -14,7 +14,7 @@ Functions:
 import numpy as np
 import pygame
 
-from graph import GraphEmbedding
+from src.graph import GraphEmbedding
 
 
 MARGIN = 50
