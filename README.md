@@ -2,6 +2,12 @@
 
 An interactive pygame visualiser that generates random planar graphs, refines their layout with a Fruchterman-Reingold spring simulation, and colors the vertices greedily.
 
+## Screenshots
+
+| FR layout settling | Converged — 18 vertices | Converged — 8 vertices |
+|---|---|---|
+| ![FR layout settling](screenshots/01_animating.png) | ![Large graph](screenshots/02_large_graph.png) | ![Small graph](screenshots/03_small_graph.png) |
+
 ## What it does
 
 - Generates a random connected planar graph using Delaunay triangulation with random edge thinning
@@ -34,8 +40,15 @@ python main.py
 ## Project structure
 
 ```
-graph.py    — Graph / GraphEmbedding classes and random_planar_graph factory
-layout.py   — GraphLayout base class and FruchtermanReingoldLayout
-draw.py     — pygame rendering constants and draw() function
-main.py     — pygame event loop
+graph.py              — Graph / GraphEmbedding classes and random_planar_graph factory
+layout.py             — GraphLayout base class and FruchtermanReingoldLayout
+draw.py               — pygame rendering constants and draw() function
+main.py               — pygame event loop
+make_screenshots.py   — headless script to regenerate screenshots/
+```
+
+To regenerate the screenshots:
+
+```bash
+python make_screenshots.py
 ```
