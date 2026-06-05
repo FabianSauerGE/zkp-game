@@ -14,14 +14,14 @@ import sys
 
 from src.graph import GraphEmbedding, random_planar_graph
 from src.layout import GraphLayout, FruchtermanReingoldLayout
-from src.draw import MARGIN, draw, draw_hud
+from src.draw import MARGIN, draw, draw_hud, draw_welcome
 
 FPS = 60
 WIDTH, HEIGHT = 800, 600
 
 N_VERTICES = 10
 DROP_PROB = 0.2
-EDGE_REPULSION = True
+EDGE_REPULSION = False
 
 
 def build() -> tuple[GraphEmbedding, GraphLayout]:
@@ -34,7 +34,7 @@ def build() -> tuple[GraphEmbedding, GraphLayout]:
     layout_size = (WIDTH - 2 * MARGIN, HEIGHT - 2 * MARGIN)
     graph = random_planar_graph(N_VERTICES, DROP_PROB)
     graph.rescale(layout_size)
-    layout = FruchtermanReingoldLayout(graph, size=layout_size, c=0.9, edge_repulsion=EDGE_REPULSION)
+    layout = FruchtermanReingoldLayout(graph, size=layout_size, c=0.9, temp=8, edge_repulsion=EDGE_REPULSION)
     return graph, layout
 
 
@@ -48,7 +48,9 @@ def main():
 
     global N_VERTICES  # pylint: disable=global-statement
     global EDGE_REPULSION  # pylint: disable=global-statement
-    graph, layout = build()
+
+    welcome = True
+    graph, layout = None, None
 
     while True:
         for event in pygame.event.get():
@@ -59,22 +61,30 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-                if event.key == pygame.K_r:
-                    graph, layout = build()
-                if event.key == pygame.K_e:
-                    EDGE_REPULSION = not EDGE_REPULSION
-                    graph, layout = build()
-                if event.key == pygame.K_UP:
-                    N_VERTICES = min(N_VERTICES + 1, 24)
-                    graph, layout = build()
-                if event.key == pygame.K_DOWN:
-                    N_VERTICES = max(N_VERTICES - 1, 6)
-                    graph, layout = build()
+                if welcome:
+                    if event.key == pygame.K_RETURN:
+                        welcome = False
+                        graph, layout = build()
+                else:
+                    if event.key == pygame.K_r:
+                        graph, layout = build()
+                    if event.key == pygame.K_e:
+                        EDGE_REPULSION = not EDGE_REPULSION
+                        graph, layout = build()
+                    if event.key == pygame.K_UP:
+                        N_VERTICES = min(N_VERTICES + 1, 24)
+                        graph, layout = build()
+                    if event.key == pygame.K_DOWN:
+                        N_VERTICES = max(N_VERTICES - 1, 6)
+                        graph, layout = build()
 
-        if layout.temp > 0.01:
-            layout.step()
-        draw(screen, graph)
-        draw_hud(screen, font, graph, EDGE_REPULSION)
+        if welcome:
+            draw_welcome(screen)
+        else:
+            if layout.temp > 0.01:
+                layout.step()
+            draw(screen, graph)
+            draw_hud(screen, font, graph, EDGE_REPULSION)
 
         pygame.display.flip()
         clock.tick(FPS)

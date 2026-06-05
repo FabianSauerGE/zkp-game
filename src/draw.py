@@ -48,12 +48,46 @@ def draw(screen: pygame.Surface, graph: GraphEmbedding) -> None:
     pts = pts.astype(int)
 
     for u, v in graph.edges:
-        pygame.draw.line(screen, EDGE_COLOR, pts[u], pts[v], EDGE_WIDTH)
+        try:
+            pygame.draw.line(screen, EDGE_COLOR, pts[u], pts[v], EDGE_WIDTH)
+        except TypeError:
+            continue
 
     for v, (x, y) in enumerate(pts):
         color = VERTEX_COLORS.get(graph.greedy_coloring[v], (120, 120, 120))
-        pygame.draw.circle(screen, color, (x, y), VERTEX_RADIUS)
-        pygame.draw.circle(screen, BG, (x, y), VERTEX_RADIUS, 2)
+        try:
+            pygame.draw.circle(screen, color, (x, y), VERTEX_RADIUS)
+            pygame.draw.circle(screen, BG, (x, y), VERTEX_RADIUS, 2)
+        except TypeError:
+            continue
+
+
+def draw_welcome(screen: pygame.Surface) -> None:
+    """Render the welcome screen with title and key hints."""
+    screen.fill(BG)
+
+    title_font = pygame.font.SysFont("monospace", 36, bold=True)
+    body_font = pygame.font.SysFont("monospace", 18)
+    hint_font = pygame.font.SysFont("monospace", 14)
+
+    w, h = screen.get_size()
+    cx = w // 2
+
+    title = title_font.render("Graph 3-Coloring", True, (229, 115, 87))
+    screen.blit(title, title.get_rect(centerx=cx, centery=h // 2 - 80))
+
+    subtitle = body_font.render("Planar graph generation  +  force-directed layout  +  greedy coloring", True, (160, 160, 160))
+    screen.blit(subtitle, subtitle.get_rect(centerx=cx, centery=h // 2 - 30))
+
+    enter = body_font.render("Press  ENTER  to generate a graph", True, (239, 159, 39))
+    screen.blit(enter, enter.get_rect(centerx=cx, centery=h // 2 + 30))
+
+    hints = [
+        "R  regenerate      UP / DOWN  change vertex count      E  toggle edge repulsion      ESC  quit",
+    ]
+    for i, line in enumerate(hints):
+        surf = hint_font.render(line, True, (100, 100, 100))
+        screen.blit(surf, surf.get_rect(centerx=cx, centery=h // 2 + 90 + i * 22))
 
 
 def draw_hud(screen: pygame.Surface, font: pygame.font.Font, graph: GraphEmbedding, edge_repulsion: bool) -> None:
